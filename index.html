@@ -1237,6 +1237,7 @@
         #particles-hero { opacity:0.25 !important; }
 
         </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
     <!-- Header -->
@@ -1906,7 +1907,6 @@
 
     
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <!-- ═══════════════════════════════════════════════════════════════ -->
 <!-- MODAL: CALCULADORA DE COMPRAVENTA VEHICULAR                    -->
 <!-- ═══════════════════════════════════════════════════════════════ -->
@@ -5290,12 +5290,15 @@ input, select { font-size: 16px !important; }
             const tarjeta = document.getElementById('tarjetaCaptura');
 
             try {
-                // Sacar la tarjeta temporalmente del modal para que html2canvas la capture bien
-                const tarjetaOrig = tarjeta.style.cssText;
-                tarjeta.style.position = 'absolute';
-                tarjeta.style.left = '-9999px';
-                tarjeta.style.top = '0';
+                // Mover tarjeta al body para que html2canvas la capture sin restricciones del modal
+                const modalCV = document.getElementById('modalCompraventa');
+                const placeholder = document.createElement('span');
+                tarjeta.parentNode.insertBefore(placeholder, tarjeta);
                 document.body.appendChild(tarjeta);
+                tarjeta.style.position = 'fixed';
+                tarjeta.style.left = '-9999px';
+                tarjeta.style.top = '0px';
+                tarjeta.style.zIndex = '-1';
 
                 const canvas = await html2canvas(tarjeta, {
                     scale: 2,
@@ -5304,15 +5307,16 @@ input, select { font-size: 16px !important; }
                     backgroundColor: '#0d1b2e',
                     logging: false,
                     width: 600,
-                    windowWidth: 620,
-                    scrollX: 0,
-                    scrollY: 0,
-                    ignoreElements: (el) => el.id === 'modalCompraventa' && el !== tarjeta
+                    windowWidth: 640
                 });
 
-                // Regresar la tarjeta a su lugar
-                document.getElementById('modalCompraventa').appendChild(tarjeta);
-                tarjeta.style.cssText = tarjetaOrig;
+                // Regresar tarjeta a su lugar original
+                placeholder.parentNode.insertBefore(tarjeta, placeholder);
+                placeholder.remove();
+                tarjeta.style.position = 'fixed';
+                tarjeta.style.left = '-9999px';
+                tarjeta.style.top = '0';
+                tarjeta.style.zIndex = '';
 
                 _imagenDataURL = canvas.toDataURL('image/png');
 
@@ -5534,7 +5538,3 @@ document.addEventListener('keydown', function(e) {
         cerrarModalCompraventa();
     }
 });
-</script>
-
-</body>
-</html>
