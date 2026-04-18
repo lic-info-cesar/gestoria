@@ -1906,6 +1906,7 @@
 
     
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <!-- ═══════════════════════════════════════════════════════════════ -->
 <!-- MODAL: CALCULADORA DE COMPRAVENTA VEHICULAR                    -->
 <!-- ═══════════════════════════════════════════════════════════════ -->
@@ -1919,27 +1920,37 @@
     background: #070d1a;
 ">
     <!-- Botón de cierre fijo -->
-    <button onclick="cerrarModalCompraventa()" style="
-        position: fixed;
-        top: 16px;
-        right: 320px;
-        z-index: 100001;
-        background: #e53935;
-        color: white;
-        border: none;
-        border-radius: 8px;
-        padding: 10px 18px;
-        font-size: 0.95rem;
-        font-weight: 700;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        box-shadow: 0 4px 16px rgba(229,57,53,0.5);
-        transition: all 0.2s;
-    " onmouseover="this.style.background='#c62828';this.style.transform='scale(1.05)'"
-       onmouseout="this.style.background='#e53935';this.style.transform='scale(1)'">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    <style>
+        #btnRegresarInicio {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100001;
+            background: rgba(229,57,53,0.92);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 7px 16px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+            transition: all 0.2s;
+            white-space: nowrap;
+            opacity: 0.85;
+        }
+        #btnRegresarInicio:hover, #btnRegresarInicio:active {
+            opacity: 1;
+            background: #c62828;
+            transform: translateX(-50%) scale(1.04);
+        }
+    </style>
+    <button id="btnRegresarInicio" onclick="cerrarModalCompraventa()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
         Regresar al Inicio
     </button>
 
@@ -5279,15 +5290,29 @@ input, select { font-size: 16px !important; }
             const tarjeta = document.getElementById('tarjetaCaptura');
 
             try {
+                // Sacar la tarjeta temporalmente del modal para que html2canvas la capture bien
+                const tarjetaOrig = tarjeta.style.cssText;
+                tarjeta.style.position = 'absolute';
+                tarjeta.style.left = '-9999px';
+                tarjeta.style.top = '0';
+                document.body.appendChild(tarjeta);
+
                 const canvas = await html2canvas(tarjeta, {
                     scale: 2,
                     useCORS: true,
                     allowTaint: true,
-                    backgroundColor: null,
+                    backgroundColor: '#0d1b2e',
                     logging: false,
                     width: 600,
-                    windowWidth: 600
+                    windowWidth: 620,
+                    scrollX: 0,
+                    scrollY: 0,
+                    ignoreElements: (el) => el.id === 'modalCompraventa' && el !== tarjeta
                 });
+
+                // Regresar la tarjeta a su lugar
+                document.getElementById('modalCompraventa').appendChild(tarjeta);
+                tarjeta.style.cssText = tarjetaOrig;
 
                 _imagenDataURL = canvas.toDataURL('image/png');
 
@@ -5311,7 +5336,9 @@ input, select { font-size: 16px !important; }
 
             } catch(err) {
                 console.error(err);
-                alert('Error al generar la imagen. Intenta de nuevo.');
+                alert('Error al generar la imagen: ' + err.message);
+                // Intentar regresar tarjeta si quedó fuera
+                try { document.getElementById('modalCompraventa').appendChild(document.getElementById('tarjetaCaptura')); } catch(e){}
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> Crear Imagen';
